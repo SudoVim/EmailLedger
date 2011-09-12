@@ -28,12 +28,12 @@ class Ledger(object):
 
     def __init__(self):
         try:
-            os.mkdir(DATA_PATH)
+            os.mkdir(self.DATA_PATH)
         except:
             pass
 
         for path in [self.LEDGER_PATH, self.USER_PATH]:
-            if not os.patch.exists(path):
+            if not os.path.exists(path):
                 open(path, 'w').close()
 
     def readUsers(self):

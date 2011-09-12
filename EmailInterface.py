@@ -34,7 +34,6 @@ class EmailLedgerInterface(Ledger):
     port = ""
     username = ""
     password = ""
-    last_read = ""
 
     from_regex = ".*<(.*)>.*"
 
@@ -47,13 +46,6 @@ class EmailLedgerInterface(Ledger):
         self.port = port
         self.username = username
         self.password = password
-
-        last_read_file = open(self.LAST_PATH, 'r')
-        lines = last_read_file.readlines()
-        last_read_file.close()
-
-        if len(lines) >= 1:
-            self.last_read = lines[0]
 
     def receiveCommands(self):
         pop_client = POP3_SSL(self.mail_server, self.port)
