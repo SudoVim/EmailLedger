@@ -11,12 +11,12 @@ class User(object):
 class Due(object):
     ower = None
     owee = None
-    ammount = 0
+    amount = 0
 
-    def __init__(self, ower, owee, ammount):
+    def __init__(self, ower, owee, amount):
         self.ower = ower
         self.owee = owee
-        self.ammount = float(ammount)
+        self.amount = float(amount)
 
 class Ledger(object):
     DATA_PATH = os.path.join('.','data')
@@ -61,8 +61,8 @@ class Ledger(object):
         ledger_file.close()
 
         for line in lines:
-            ower, owee, ammount = line.split()
-            self.dues.append(Due(ower, owee, ammount))
+            ower, owee, amount = line.split()
+            self.dues.append(Due(ower, owee, amount))
 
     def dumpUsers(self):
         users_file = open(self.USER_PATH, 'w')
@@ -79,7 +79,7 @@ class Ledger(object):
 
         for due in self.dues:
             ledger_file.write("%s %s %0.2f\n" % (due.ower, due.owee,
-                                                 due.ammount))
+                                                 due.amount))
 
         ledger_file.close()
 
@@ -116,7 +116,7 @@ class Ledger(object):
 
         return False, None
 
-    def addDue(self, ower, owee, ammount):
+    def addDue(self, ower, owee, amount):
         st, ower = self.existsUser(ower)
         if not st:
             return False, "The user who was given money doesn't exist."
@@ -125,37 +125,37 @@ class Ledger(object):
         if not st:
             return False, "The user who received money doesn't exists."
 
-        if ammount < 0:
-            return False, "A negative ammount cannot be paid!"
+        if amount < 0:
+            return False, "A negative amount cannot be paid!"
 
         for ii, due in enumerate(self.dues):
             if due.ower == ower and due.owee == owee:
-                due.ammount += float(ammount)
-                due.ammount = int(due.ammount * 100 + 0.5) / 100.0
-                return True, "Dued ammount updated. " \
+                due.amount += float(amount)
+                due.amount = int(due.amount * 100 + 0.5) / 100.0
+                return True, "Dued amount updated. " \
                              "%s now owes %s $%.2f" \
-                             % (due.ower, due.owee, due.ammount)
+                             % (due.ower, due.owee, due.amount)
             elif due.ower == owee and due.owee == ower:
-                new_ammount = due.ammount - float(ammount)
-                new_ammount = int(new_ammount * 100 + 0.5) / 100.0
-                if new_ammount == 0:
+                new_amount = due.amount - float(amount)
+                new_amount = int(new_amount * 100 + 0.5) / 100.0
+                if new_amount == 0:
                     del self.dues[ii]
                     return True, "%s is now squared on his debt to %s." \
                                  % (owee, ower)
-                elif new_ammount < 0:
-                    self.dues.append(Due(ower, owee, -1 * new_ammount))
+                elif new_amount < 0:
+                    self.dues.append(Due(ower, owee, -1 * new_amount))
                     del self.dues[ii]
                     return True, "The tables have turned! %s now owes %s " \
-                                 "$%.2f" % (ower, owee, -1 * new_ammount)
+                                 "$%.2f" % (ower, owee, -1 * new_amount)
                 else:
-                    due.ammount = new_ammount
+                    due.amount = new_amount
                     
                     return True, "Some of %s's debt has been paid. %s now " \
                                  "owes %s $%.2f" % (owee, owee, ower,
-                                                    new_ammount)
+                                                    new_amount)
 
-        self.dues.append(Due(ower, owee, ammount))
-        return True, "%s now owes %s $%.2f" % (ower, owee, ammount)
+        self.dues.append(Due(ower, owee, amount))
+        return True, "%s now owes %s $%.2f" % (ower, owee, amount)
 
     def listUsers(self):
         ret = "Users:\n"
@@ -168,13 +168,13 @@ class Ledger(object):
         ret = "People who you owe:\n"
         for due in self.dues:
             if due.ower.lower() == user.lower():
-                ret += "You owe %s $%.2f\n" % (due.owee, due.ammount)
+                ret += "You owe %s $%.2f\n" % (due.owee, due.amount)
 
         ret += "\n"
         ret += "People who owe you:\n"
         for due in self.dues:
             if due.owee.lower() == user.lower():
-                ret += "%s owes you $%.2f\n" % (due.ower, due.ammount)
+                ret += "%s owes you $%.2f\n" % (due.ower, due.amount)
 
         return ret
 
