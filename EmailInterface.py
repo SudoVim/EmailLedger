@@ -119,7 +119,9 @@ class EmailLedgerInterface(Ledger):
                         "and before each command. Also, usernames must be a "
                         "single token. (no spaces)\n"
                         "\n"
-                        "eg. ledger add me my_name\n")
+                        "eg. ledger add me my_name\n"
+                        "\n"
+                        "And of course... https://github.com/SudoVim/TMSLedger\n")
                 continue
 
             # add me <uname>
