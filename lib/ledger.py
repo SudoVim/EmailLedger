@@ -85,14 +85,16 @@ class Ledger(object):
 
     def addUser(self, username, email):
         for user in self.users:
-            if username == user.username:
-                return False, "Username already exists for another user."
+            if username.lower() == user.username.lower():
+                return False, "Username '%s' already exists for another user."\
+                              % (username)
 
-            if email == user.email:
-                return False, "Email already exists for another user."
+            if email.lower() == user.email.lower():
+                return False, "Email '%s' already exists for another user." \
+                              % (email)
 
         self.users.append(User(username, email))
-        return True, "Successfully added user %s with email %s" \
+        return True, "Successfully added user %s with email %s." \
                      % (username, email)
 
     def existsUser(self, user):
@@ -100,7 +102,7 @@ class Ledger(object):
             if user.lower() == usr.username.lower():
                 return True, usr.username
 
-        return False, None
+        return False, "%s doesn't exist." % user
 
     def getUnameFromEmail(self, email):
         for user in self.users:
@@ -119,11 +121,11 @@ class Ledger(object):
     def addDue(self, ower, owee, ammount):
         st, ower = self.existsUser(ower)
         if not st:
-            return False, "The user who was given money doesn't exist."
+            return False, ower
 
         st, owee = self.existsUser(owee)
         if not st:
-            return False, "The user who received money doesn't exists."
+            return False, owee
 
         if ammount < 0:
             return False, "A negative ammount cannot be paid!"
@@ -133,7 +135,7 @@ class Ledger(object):
                 due.ammount += float(ammount)
                 due.ammount = int(due.ammount * 100 + 0.5) / 100.0
                 return True, "Dued ammount updated. " \
-                             "%s now owes %s $%.2f" \
+                             "%s now owes %s $%.2f." \
                              % (due.ower, due.owee, due.ammount)
             elif due.ower == owee and due.owee == ower:
                 new_ammount = due.ammount - float(ammount)
@@ -146,16 +148,16 @@ class Ledger(object):
                     self.dues.append(Due(ower, owee, -1 * new_ammount))
                     del self.dues[ii]
                     return True, "The tables have turned! %s now owes %s " \
-                                 "$%.2f" % (ower, owee, -1 * new_ammount)
+                                 "$%.2f." % (ower, owee, -1 * new_ammount)
                 else:
                     due.ammount = new_ammount
                     
                     return True, "Some of %s's debt has been paid. %s now " \
-                                 "owes %s $%.2f" % (owee, owee, ower,
+                                 "owes %s $%.2f." % (owee, owee, ower,
                                                     new_ammount)
 
         self.dues.append(Due(ower, owee, ammount))
-        return True, "%s now owes %s $%.2f" % (ower, owee, ammount)
+        return True, "%s now owes %s $%.2f." % (ower, owee, ammount)
 
     def listUsers(self):
         ret = "Users:\n"
