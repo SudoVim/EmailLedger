@@ -76,6 +76,8 @@ class EmailLedgerInterface(Ledger):
 
                 print "sender is %s" % sender
 
+                ledger_command_received = False
+
                 for part in headers.walk():
                     if part.get_content_type() == 'text/plain':
                         print part.get_payload()
@@ -92,7 +94,8 @@ class EmailLedgerInterface(Ledger):
                                 if split[0].lower() == "ledger":
                                     self.command_queue.append(Command(line,
                                                         sender, split[1:]))
-                                else:
+                                    ledger_command_received = True
+                                elif not ledger_command_received:
                                     self.sendMessage(sender, "You must start "
                                             "each command with ledger")
                                 print "Received command: %s from %s" \
