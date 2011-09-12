@@ -8,6 +8,18 @@ class User(object):
         self.username = username
         self.email = email
 
+    def __eq__(self, other):
+        if isinstance(other, User):
+            return self.username == other.username and \
+                    self.email == other.email
+        return NotImplemented
+
+    def __ne__(self, other):
+        ret = self.__eq__(other)
+        if ret is NotImplemented:
+            return ret
+        return not ret
+
 class Due(object):
     ower = None
     owee = None
@@ -17,6 +29,19 @@ class Due(object):
         self.ower = ower
         self.owee = owee
         self.ammount = float(ammount)
+
+    def __eq__(self, other):
+        if isinstance(other, Due):
+            return self.ower == other.ower and \
+                    self.owee == other.owee and \
+                    self.ammount == other.ammount
+        return NotImplemented
+
+    def __ne__(self, other):
+        ret = self.__eq__(other)
+        if ret is NotImplemented:
+            return ret
+        return not ret
 
 class Ledger(object):
     DATA_PATH = os.path.join('.','data')
