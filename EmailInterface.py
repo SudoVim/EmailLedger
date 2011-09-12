@@ -112,8 +112,8 @@ class EmailLedgerInterface(Ledger):
                 self.sendMessage(command.issuer,
                         "Commands:\n"
                         "add me <uname>\n"
-                        "<uname> owes me <ammount>\n"
-                        "i paid <uname> <ammount>\n"
+                        "<uname> owes me <amount>\n"
+                        "i paid <uname> <amount>\n"
                         "get users\n"
                         "get my dues\n"
                         "help\n"
@@ -141,7 +141,7 @@ class EmailLedgerInterface(Ledger):
                                                  % (args[2], command.issuer))
                 continue
 
-            # <uname> owes me <ammount>
+            # <uname> owes me <amount>
             if len(args) >= 4 and ("%s %s" % (args[1], args[2])).lower() \
                     == "owes me":
                 st, owee = self.getUnameFromEmail(command.issuer)
@@ -152,9 +152,9 @@ class EmailLedgerInterface(Ledger):
                     continue
 
                 ower = args[0]
-                ammount = float(args[3].strip("$"))
+                amount = float(args[3].strip("$"))
 
-                st, msg = self.addDue(ower, owee, ammount)
+                st, msg = self.addDue(ower, owee, amount)
                 if not st:
                     self.sendMessage(command.issuer, msg)
                     continue
@@ -163,7 +163,7 @@ class EmailLedgerInterface(Ledger):
                 self.sendMessage(self.getEmailFromUname(ower)[1], msg)
                 continue
 
-            # i paid <uname> <ammount>
+            # i paid <uname> <amount>
             if len(args) >= 4 and ("%s %s" % (args[0], args[1])).lower() == \
                     "i paid":
                 owee = args[2]
@@ -174,9 +174,9 @@ class EmailLedgerInterface(Ledger):
                                                      " assistance")
                     continue
 
-                ammount = float(args[3].strip("$"))
+                amount = float(args[3].strip("$"))
 
-                st, msg = self.addDue(owee, ower, ammount)
+                st, msg = self.addDue(owee, ower, amount)
                 if not st:
                     self.sendMessage(command.issuer, msg)
                     continue
