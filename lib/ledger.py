@@ -69,6 +69,7 @@ class Ledger(object):
 
         for line in lines:
             ower, owee, amount = line.split()
+            amount = int(float(amount) * 100 + .5)
             self.dues.append(Due(ower, owee, amount))
 
     def dumpUsers(self):
