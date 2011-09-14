@@ -3,7 +3,8 @@ import shutil
 import os
 import random
 
-from lib.Ledger import Ledger
+from lib.ledger import Ledger
+from lib.ledger import Due
 
 class LedgerTest(unittest.TestCase):
 
@@ -12,6 +13,8 @@ class LedgerTest(unittest.TestCase):
             shutil.rmtree(Ledger.DATA_PATH)
 
         self.ledger = Ledger()
+        self.ledger.users = []
+        self.ledger.dues = []
         self.num_users = 0
         self.test_uname = "testuname"
         self.test_email = "testemail"
@@ -19,13 +22,19 @@ class LedgerTest(unittest.TestCase):
     def genUsername(self, ii):
         return "%s%d" % (self.test_uname, ii)
 
+    def genDue(self, ower_idx, owee_idx, amount):
+        return Due(self.genUsername(ower_idx), self.genUsername(owee_idx),
+                   int(amount * 100 + .5))
+
     def genEmail(self, ii):
         return "%s%d" % (self.test_email, ii)
 
     def addUser(self):
-        return self.ledger.addUser(self.genUsername(self.num_users),
+        st, msg = self.ledger.addUser(self.genUsername(self.num_users),
                             self.genEmail(self.num_users))
         self.num_users += 1
+
+        return st, msg
 
     def assertUsersCorrect(self):
         self.assertEquals(len(self.ledger.users), self.num_users)
@@ -35,9 +44,9 @@ class LedgerTest(unittest.TestCase):
             self.assertEquals(self.ledger.users[ii].email,
                               self.genEmail(ii))
 
-    def addDue(ower_idx, owee_idx, amount):
-        return self.ledger.addDue(self.users[ower_idx].username,
-                           self.users[owee_idx].username,
+    def addDue(self, ower_idx, owee_idx, amount):
+        return self.ledger.addDue(self.ledger.users[ower_idx].username,
+                           self.ledger.users[owee_idx].username,
                            amount)
 
 class AddUserTest(LedgerTest):
@@ -51,8 +60,9 @@ class AddUserTest(LedgerTest):
             st, msg = self.addUser()
             self.assertEquals(st, True)
             self.assertEquals(msg, "Successfully added user %s with email "
-                              "%s." % (self.genUsername(ii), self.genEmail(ii))
-            self.assertUsersCorrect(self)
+                              "%s." % (self.genUsername(ii),
+                              self.genEmail(ii)))
+            self.assertUsersCorrect()
 
     # Failure case(s)
     def test_same_username(self):
@@ -80,7 +90,7 @@ class AddDueTest(LedgerTest):
         return random.randint(2, 10)
 
     def getRandomDueIncrement(self):
-        return int(random.random() * 3 * 100) / 100.0
+        return random.randint(1, 299) / 100.0
 
     # Success case(s)
     def test_addDues(self):
@@ -93,13 +103,20 @@ class AddDueTest(LedgerTest):
 
         for ii in range(test_iters):
             st, msg = self.addDue(0, 1, due_increment)
-            self.assertEquals(len(self.dues), 1)
-            self.assertEquals(self.dues[0], Due(self.genUsername(0),
+            self.assertEquals(len(self.ledger.dues), 1)
+            self.assertEquals(self.ledger.dues[0], Due(self.genUsername(0),
                                                 self.genUsername(1),
-                                                due_increment * (ii + 1))
+                                                int(due_increment * (ii + 1) *
+                                                100 + .5)))
             self.assertEquals(st, True)
-            self.assertEquals(msg, "%s now owes %s $%.2f."
-                % (self.genUsername(0), self.genUsername(1),
+
+            if ii == 0:
+                self.assertEquals(msg, "%s now owes %s $%.2f."
+                    % (self.genUsername(0), self.genUsername(1),
+                        (ii + 1) * due_increment))
+            else:
+                self.assertEquals(msg, "Dued amount updated. %s now owes %s "
+                    "$%.2f." % (self.genUsername(0), self.genUsername(1),
                     (ii + 1) * due_increment))
 
     def test_reduceDue(self):
@@ -110,20 +127,43 @@ class AddDueTest(LedgerTest):
         for ii in range(2):
             self.addUser()
 
-        self.addDue(0, 1, test_iters)
+        self.addDue(0, 1, due_increment * test_iters)
         for ii in range(test_iters):
             st, msg = self.addDue(1, 0, due_increment)
-            self.assertEquals(len(self.dues), 1)
-            self.assertEquals(seld.dues[0], Due(self.genUsername(0),
-                                                self.genUsername(1),
-                                                (test_iters - ii - 1) *
-                                                due_increment))
+            self.assertEquals(len(self.ledger.dues), 1 if ii < test_iters - 1 \
+                                                     else 0)
+
+            if ii == test_iters - 1:
+                break
+
+            new_due = self.genDue(0, 1, (test_iters - ii - 1) * due_increment)
+            self.assertEquals(self.ledger.dues[0], new_due)
             self.assertEquals(st, True)
 
-            if test_iters - ii > 1:
-                self.assertEquals(msg, "Dued amount updated. %s now owes %s "
-                                       "$%.2f." % (self.genUsername(0),
-                                                   self.genUsername(1),
-                                                   (test_iters - ii - 1) *
-                                                   due_increment))
+            self.assertEquals(msg, "Some of %s's debt has been paid. %s "
+                                   "now owes %s $%s."
+                                   % (self.genUsername(0),
+                                   self.genUsername(0),
+                                   self.genUsername(1),
+                                   new_due.formatAmount()))
+
+    def test_paidBackMore(self):
+        due_increment = self.getRandomDueIncrement()
+
+        # add two users
+        for ii in range(2):
+            self.addUser()
+
+        self.addDue(0, 1, due_increment)
+
+        st, msg = self.addDue(1, 0, 2 * due_increment)
+        self.assertEquals(len(self.ledger.dues), 1)
+
+        new_due = self.genDue(1, 0, due_increment)
+        self.assertEquals(self.ledger.dues[0], new_due)
+
+        self.assertEquals(st, True)
+        self.assertEquals(msg, "The tables have turned! %s now owes %s $%s."
+                               % (self.genUsername(1), self.genUsername(0),
+                                  new_due.formatAmount()))
 

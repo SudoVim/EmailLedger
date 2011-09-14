@@ -31,11 +31,7 @@ class Due(object):
         self.amount = int(amount)
 
     def formatAmount(self):
-        # Hack. In a hurry..
-        decimal = str(self.amount % 100)
-        while len(decimal) < 2:
-            decimal += "0"
-        return "%d.%s" % (self.amount / 100, decimal)
+        return "%d.%02d" % (self.amount / 100, self.amount % 100)
 
     def __eq__(self, other):
         if isinstance(other, Due):
@@ -49,6 +45,10 @@ class Due(object):
         if ret is NotImplemented:
             return ret
         return not ret
+
+    def __str__(self):
+        return "ower: %s owee: %s amount: %s" % (self.ower, self.owee,
+            self.formatAmount())
 
 class Ledger(object):
     DATA_PATH = os.path.join('.','data')
@@ -193,7 +193,7 @@ class Ledger(object):
 
         new_due = Due(ower, owee, amount)
         self.dues.append(new_due)
-        return True, "%s now owes %s $%s" % (ower, owee, new_due.formatAmount())
+        return True, "%s now owes %s $%s." % (ower, owee, new_due.formatAmount())
 
     def listUsers(self):
         ret = "Users:\n"
