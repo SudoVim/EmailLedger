@@ -41,7 +41,7 @@ class Due(object):
         if isinstance(other, Due):
             return self.ower == other.ower and \
                     self.owee == other.owee and \
-                    self.ammount == other.ammount
+                    self.amount == other.amount
         return NotImplemented
 
     def __ne__(self, other):

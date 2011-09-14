@@ -35,10 +35,10 @@ class LedgerTest(unittest.TestCase):
             self.assertEquals(self.ledger.users[ii].email,
                               self.genEmail(ii))
 
-    def addDue(ower_idx, owee_idx, ammount):
+    def addDue(ower_idx, owee_idx, amount):
         return self.ledger.addDue(self.users[ower_idx].username,
                            self.users[owee_idx].username,
-                           ammount)
+                           amount)
 
 class AddUserTest(LedgerTest):
 
@@ -121,7 +121,7 @@ class AddDueTest(LedgerTest):
             self.assertEquals(st, True)
 
             if test_iters - ii > 1:
-                self.assertEquals(msg, "Dued ammount updated. %s now owes %s "
+                self.assertEquals(msg, "Dued amount updated. %s now owes %s "
                                        "$%.2f." % (self.genUsername(0),
                                                    self.genUsername(1),
                                                    (test_iters - ii - 1) *
