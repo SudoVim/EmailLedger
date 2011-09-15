@@ -12,6 +12,26 @@ from poplib import POP3_SSL
 from email.mime.text import MIMEText
 import email
 
+class Message(object):
+    recipient = ""
+    message = ""
+
+    def __init__(recpient, message):
+        self.recipient = recipient
+        self.message = message
+
+    def __eq__(self, other):
+        if isinstance(other, Message):
+            return self.recipient == other.recipient and \
+                self.message == other.message
+        return NotImplemented
+
+    def __ne__(self, other):
+        ret = self.__eq__(other):
+        if ret is NotImplemented:
+            return ret
+        return not ret
+
 class Command(object):
     command = ""
     args = []
@@ -38,6 +58,9 @@ class EmailLedgerInterface(Ledger):
     from_regex = ".*<(.*)>.*"
 
     command_queue = []
+    message_list = []
+
+    debug_mode = False
 
     def __init__(self, mail_server, port, username, password):
         super(EmailLedgerInterface, self).__init__()
@@ -84,24 +107,28 @@ class EmailLedgerInterface(Ledger):
                         lines = part.get_payload().split('\n')
 
                         for line in lines:
-                            if len(line) == 0 or line[0] == ">" or "@" in line:
-                                continue
-                            
-                            split = line.split()
-
-                            # find the command line
-                            if len(split) > 0:
-                                if split[0].lower() == "ledger":
-                                    self.command_queue.append(Command(line,
-                                                        sender, split[1:]))
-                                    ledger_command_received = True
-                                elif not ledger_command_received:
-                                    self.sendMessage(sender, "You must start "
-                                            "each command with ledger")
+                            if self.parseLedgerCommand(line):
+                                ledger_command_received = True
                                 print "Received command: %s from %s" \
                                         % (line,  sender)
 
+                if not ledger_command_received:
+                    sendMessage(sender, "You must begin each command with "
+                                        "'ledger'")
+
         pop_client.quit()
+
+    def parseLedgerCommand(self, command):
+        split = command.split()
+
+        # find the command line
+        if len(split) > 0:
+            if split[0].lower() == "ledger":
+                self.command_queue.append(Command(line,
+                                    sender, split[1:]))
+                return True
+
+        return False
            
     def performCommands(self):
         for command in self.command_queue:
@@ -213,6 +240,10 @@ class EmailLedgerInterface(Ledger):
         self.command_queue = []
 
     def sendMessage(self, to_address, message):
+        self.message_list.append(Message(to_address, message))
+        if self.debug_mode:
+            return
+
         # From http://docs.python.org/library/email-examples.html
         # Create a text/plain message
         msg = MIMEText(message)
