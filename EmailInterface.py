@@ -27,7 +27,7 @@ class Message(object):
         return NotImplemented
 
     def __ne__(self, other):
-        ret = self.__eq__(other):
+        ret = self.__eq__(other)
         if ret is NotImplemented:
             return ret
         return not ret
