@@ -8,6 +8,8 @@ from lib.ledger import Due
 from lib.ledger import User
 
 class LedgerTest(unittest.TestCase):
+    test_uname = "testuname"
+    test_email = "testemail"
 
     def setUp(self):
         if os.path.exists(Ledger.DATA_PATH):
@@ -17,8 +19,6 @@ class LedgerTest(unittest.TestCase):
         self.ledger.users = []
         self.ledger.dues = []
         self.num_users = 0
-        self.test_uname = "testuname"
-        self.test_email = "testemail"
 
     def genUsername(self, ii):
         return "%s%d" % (self.test_uname, ii)
