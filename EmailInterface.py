@@ -118,13 +118,13 @@ class EmailLedgerInterface(Ledger):
 
         pop_client.quit()
 
-    def parseLedgerCommand(self, command):
+    def parseLedgerCommand(self, sender, command):
         split = command.split()
 
         # find the command line
         if len(split) > 0:
             if split[0].lower() == "ledger":
-                self.command_queue.append(Command(line,
+                self.command_queue.append(Command(command,
                                     sender, split[1:]))
                 return True
 
