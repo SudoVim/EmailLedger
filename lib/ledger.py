@@ -4,12 +4,22 @@ class User(object):
 
     def __init__(self, username, email):
         self.username = username
-        self.email = email
+
+        if isinstance(email, list):
+            self.email = email
+        else:
+            self.email = []
+            self.email.append(email)
 
     def __eq__(self, other):
         if isinstance(other, User):
-            return self.username == other.username and \
-                    self.email == other.email
+            if self.username == other.username and \
+                    len(self.email) == len(other.email):
+                for eml1, eml2 in zip(self.email, other.email):
+                    if eml1 != eml2:
+                        return False
+
+                return True
         return NotImplemented
 
     def __ne__(self, other):
@@ -17,6 +27,11 @@ class User(object):
         if ret is NotImplemented:
             return ret
         return not ret
+
+    def printLine(self):
+        ret = self.username
+        for eml in self.email:
+            ret += " " + eml
 
 class Due(object):
 
@@ -70,7 +85,9 @@ class Ledger(object):
         users_file.close()
 
         for line in lines:
-            name, email = line.split()
+            split = line.split()
+            name = split[0]
+            email = split[1:]
             self.users.append(User(name, email))
 
     def sortUsers(self):
@@ -98,7 +115,7 @@ class Ledger(object):
         self.sortUsers()
 
         for user in self.users:
-            users_file.write("%s %s\n" % (user.username, user.email))
+            users_file.write(user.printLine() + "\n")
 
         users_file.close()
 
@@ -117,7 +134,7 @@ class Ledger(object):
                 return False, "Username '%s' already exists for another user."\
                               % (username)
 
-            if email.lower() == user.email.lower():
+            if email in user.email:
                 return False, "Email '%s' already exists for another user." \
                               % (email)
 
@@ -125,16 +142,37 @@ class Ledger(object):
         return True, "Successfully added user %s with email %s." \
                      % (username, email)
 
-    def existsUser(self, user):
-        for usr in self.users:
-            if user.lower() == usr.username.lower():
-                return True, usr.username
+    def addEmail(self, username, email):
+        st, user = self.findUser(username)
 
-        return False, "%s doesn't exist." % user
+        if not st:
+            return False, user
+
+        st, uname = self.getUnameFromEmail(email)
+        if st:
+            return False, "Email address %s in use by another user." % email
+
+        user.email.append(email)
+        return True, "Email address %s successfully added to user %s." \
+            % (email, user.username)
+
+    def findUser(self, username):
+        for usr in self.users:
+            if usr.username.lower() == username.lower():
+                return True, usr
+
+        return False, "%s doesn't exist." % username
+
+    def existsUser(self, user):
+        st, usr = self.findUser(user)
+        if not st:
+            return False, usr
+        else:
+            return True, usr.username
 
     def getUnameFromEmail(self, email):
         for user in self.users:
-            if user.email.lower() == email.lower():
+            if email in user.email:
                 return True, user.username
 
         return False, None
