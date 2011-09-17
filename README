@@ -4,3 +4,9 @@ Anyways, this only works with a gmail-based host account, however any mail
 account can be a user. To run, perform the following:
 
 LedgerDriver.py <pop_server> <port> <gmail_username> <gmail_password>
+
+To run unittests, perform the following from the top directory:
+
+<python> -m unittest discover <test_dir> "*Test.py"
+
+<test_dir> - the directory you wish to test
