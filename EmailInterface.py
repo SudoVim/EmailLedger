@@ -16,7 +16,7 @@ class Message(object):
     recipient = ""
     message = ""
 
-    def __init__(recpient, message):
+    def __init__(self, recipient, message):
         self.recipient = recipient
         self.message = message
 
@@ -31,6 +31,9 @@ class Message(object):
         if ret is NotImplemented:
             return ret
         return not ret
+
+    def __str__(self):
+        return "To: %s; Message: %s" % (self.recipient, self.message)
 
 class Command(object):
     command = ""
@@ -49,16 +52,7 @@ class Command(object):
                 % (command, args, issuer)
 
 class EmailLedgerInterface(Ledger):
-    ledger = None
-    mail_server = ""
-    port = ""
-    username = ""
-    password = ""
-
     from_regex = ".*<(.*)>.*"
-
-    command_queue = []
-    message_list = []
 
     debug_mode = False
 
@@ -69,6 +63,9 @@ class EmailLedgerInterface(Ledger):
         self.port = port
         self.username = username
         self.password = password
+
+        self.command_queue = []
+        self.message_list = []
 
     def receiveCommands(self):
         pop_client = POP3_SSL(self.mail_server, self.port)
@@ -157,15 +154,8 @@ class EmailLedgerInterface(Ledger):
             # add me <uname>
             if len(args) >= 3 and ("%s %s" % (args[0], args[1])).lower() \
                     == "add me":
-                if not self.addUser(args[2], command.issuer):
-                    self.sendMessage(command.issuer, "%s: Username or email "
-                                                     "address already exists"
-                                                     % command.command)
-                    continue
-
-                self.sendMessage(command.issuer, "Username %s added with "
-                                                 "address %s"
-                                                 % (args[2], command.issuer))
+                st, msg = self.addUser(args[2], command.issuer)
+                self.sendMessage(command.issuer, msg)
                 continue
 
             # <uname> owes me <amount>

@@ -1,8 +1,6 @@
 import os
 
 class User(object):
-    username = ""
-    email = ""
 
     def __init__(self, username, email):
         self.username = username
@@ -21,9 +19,6 @@ class User(object):
         return not ret
 
 class Due(object):
-    ower = None
-    owee = None
-    amount = 0
 
     def __init__(self, ower, owee, amount):
         self.ower = ower
@@ -55,9 +50,6 @@ class Ledger(object):
     LEDGER_PATH = os.path.join(DATA_PATH, 'ledger.txt')
     USER_PATH = os.path.join(DATA_PATH, 'users.txt')
 
-    users = []
-    dues = []
-
     def __init__(self):
         try:
             os.mkdir(self.DATA_PATH)
@@ -67,6 +59,9 @@ class Ledger(object):
         for path in [self.LEDGER_PATH, self.USER_PATH]:
             if not os.path.exists(path):
                 open(path, 'w').close()
+
+        self.users = []
+        self.dues = []
 
     def readUsers(self):
         self.users = []

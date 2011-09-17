@@ -16,8 +16,6 @@ class LedgerTest(unittest.TestCase):
             shutil.rmtree(Ledger.DATA_PATH)
 
         self.ledger = Ledger()
-        self.ledger.users = []
-        self.ledger.dues = []
         self.num_users = 0
 
     def genUsername(self, ii):
