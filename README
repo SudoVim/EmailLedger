@@ -4,6 +4,3 @@ Anyways, this only works with a gmail-based host account, however any mail
 account can be a user. To run, perform the following:
 
 LedgerDriver.py <pop_server> <port> <gmail_username> <gmail_password>
-
-For assistance, send email with the subject 'ledger' with message 'ledger help'
-to <gmail_username>@gmail.com
