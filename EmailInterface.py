@@ -104,14 +104,14 @@ class EmailLedgerInterface(Ledger):
                         lines = part.get_payload().split('\n')
 
                         for line in lines:
-                            if self.parseLedgerCommand(line):
+                            if self.parseLedgerCommand(sender, line):
                                 ledger_command_received = True
                                 print "Received command: %s from %s" \
                                         % (line,  sender)
 
                 if not ledger_command_received:
-                    sendMessage(sender, "You must begin each command with "
-                                        "'ledger'")
+                    self.queueMessage(sender, "You must begin each command "
+                                        "with 'ledger'")
 
         pop_client.quit()
 
@@ -133,7 +133,7 @@ class EmailLedgerInterface(Ledger):
 
             # help
             if len(args) >= 1 and args[0].lower() == "help":
-                self.sendMessage(command.issuer,
+                self.queueMessage(command.issuer,
                         "Commands:\n"
                         "add me <uname>\n"
                         "<uname> owes me <amount>\n"
@@ -155,7 +155,7 @@ class EmailLedgerInterface(Ledger):
             if len(args) >= 3 and ("%s %s" % (args[0], args[1])).lower() \
                     == "add me":
                 st, msg = self.addUser(args[2], command.issuer)
-                self.sendMessage(command.issuer, msg)
+                self.queueMessage(command.issuer, msg)
                 continue
 
             owesMe = False
@@ -185,15 +185,15 @@ class EmailLedgerInterface(Ledger):
                 amount = float(args[3].strip("$"))
 
                 st, msg = self.addDue(ower, owee, amount)
-                self.sendMessage(command.issuer, msg)
+                self.queueMessage(command.issuer, msg)
                 if st:
-                    self.sendMessage(self.getEmailFromUname(ower)[1], msg)
+                    self.queueMessage(self.getEmailFromUname(ower)[1], msg)
                 continue
 
             # get users
             if len(args) >= 2 and ("%s %s" % (args[0], args[1])).lower() \
                     == "get users":
-                self.sendMessage(command.issuer, self.listUsers())
+                self.queueMessage(command.issuer, self.listUsers())
                 continue
 
             # get my dues
@@ -204,45 +204,62 @@ class EmailLedgerInterface(Ledger):
                     self.notAUser(command.issuer)
                     continue
 
-                self.sendMessage(command.issuer, self.listDues(user))
+                self.queueMessage(command.issuer, self.listDues(user))
                 continue
 
-            self.sendMessage(command.issuer, "%s: I didn't understand you. "
+            self.queueMessage(command.issuer, "%s: I didn't understand you. "
                                              "Send 'ledger help' for "
                                              "assistance" % command.command)
 
-        self.dumpUsers()
-        self.dumpLedger()
         self.command_queue = []
 
     def notAUser(self, to_address):
-            self.sendMessage(to_address, "You are not a user.\n"
+            self.queueMessage(to_address, "You are not a user.\n"
                 "Send 'ledger help' for assistance.")
 
-    def sendMessage(self, to_address, message):
+    def queueMessage(self, to_address, message):
         self.message_list.append(Message(to_address, message))
+
+    def sendMessages(self):
         if self.debug_mode:
             return
 
-        # From http://docs.python.org/library/email-examples.html
-        # Create a text/plain message
-        msg = MIMEText(message)
-        me = "%s@gmail.com" % self.username
-        you = to_address
+        # sort messages by recipient
+        sorted_messages = {}
+        for msg in self.message_list:
+            try:
+                sorted_messages[msg.recipient]
+            except KeyError:
+                sorted_messages[msg.recipient] = []
 
-        # me == the sender's email address
-        # you == the recipient's email address
-        msg['Subject'] = 'ledger'
-        msg['From'] = me
-        msg['To'] = you
+            sorted_messages[msg.recipient].append(msg)
 
-        server = smtplib.SMTP('smtp.gmail.com',587) #port 465 or 587
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login('%s@gmail.com' % self.username,self.password)
-        server.sendmail('%s@gmail.com' % self.username,to_address,
-                        msg.as_string())
-        server.close()
-            
+        for key in sorted_messages.keys():
+            msg_to_send = "--------------------------\n"
+            for msg in sorted_messages[key]:
+                msg_to_send += msg.message + "\n"
+                msg_to_send += "--------------------------\n"
+
+            # From http://docs.python.org/library/email-examples.html
+            # Create a text/plain message
+            msg = MIMEText(msg_to_send)
+            me = "%s@gmail.com" % self.username
+            you = key
+
+            # me == the sender's email address
+            # you == the recipient's email address
+            msg['Subject'] = 'ledger'
+            msg['From'] = me
+            msg['To'] = you
+
+            server = smtplib.SMTP('smtp.gmail.com',587) #port 465 or 587
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login('%s@gmail.com' % self.username,self.password)
+            server.sendmail('%s@gmail.com' % self.username, you,
+                            msg.as_string())
+            server.close()
+
+        self.message_list = []
 
