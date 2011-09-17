@@ -12,9 +12,6 @@ class LedgerTest(unittest.TestCase):
     test_email = "testemail"
 
     def setUp(self):
-        if os.path.exists(Ledger.DATA_PATH):
-            shutil.rmtree(Ledger.DATA_PATH)
-
         self.ledger = Ledger()
         self.num_users = 0
 
