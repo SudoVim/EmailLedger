@@ -158,48 +158,36 @@ class EmailLedgerInterface(Ledger):
                 self.sendMessage(command.issuer, msg)
                 continue
 
+            owesMe = False
+            ower = ""
+            owee = ""
+            st = False
             # <uname> owes me <amount>
             if len(args) >= 4 and ("%s %s" % (args[1], args[2])).lower() \
                     == "owes me":
-                st, owee = self.getUnameFromEmail(command.issuer)
-                if not st:
-                    self.sendMessage(command.issuer, "you are not a user.\n"
-                                                     "send 'ledger help' for"
-                                                     " assistance")
-                    continue
-
                 ower = args[0]
-                amount = float(args[3].strip("$"))
-
-                st, msg = self.addDue(ower, owee, amount)
-                if not st:
-                    self.sendMessage(command.issuer, msg)
-                    continue
-
-                self.sendMessage(command.issuer, msg)
-                self.sendMessage(self.getEmailFromUname(ower)[1], msg)
-                continue
+                st, owee = self.getUnameFromEmail(command.issuer)
+                owesMe = True
 
             # i paid <uname> <amount>
             if len(args) >= 4 and ("%s %s" % (args[0], args[1])).lower() == \
                     "i paid":
-                owee = args[2]
-                st, ower = self.getUnameFromEmail(command.issuer)
+                ower = args[2]
+                st, owee = self.getUnameFromEmail(command.issuer)
+                owesMe = True
+
+            # 'owes me' and 'i paid' work the same way
+            if owesMe:
                 if not st:
-                    self.sendMessage(command.issuer, "you are not a user.\n"
-                                                     "send 'ledger help' for"
-                                                     " assistance")
+                    self.notAUser(command.issuer)
                     continue
 
                 amount = float(args[3].strip("$"))
 
-                st, msg = self.addDue(owee, ower, amount)
-                if not st:
-                    self.sendMessage(command.issuer, msg)
-                    continue
-
+                st, msg = self.addDue(ower, owee, amount)
                 self.sendMessage(command.issuer, msg)
-                self.sendMessage(self.getEmailFromUname(owee)[1], msg)
+                if st:
+                    self.sendMessage(self.getEmailFromUname(ower)[1], msg)
                 continue
 
             # get users
@@ -213,9 +201,7 @@ class EmailLedgerInterface(Ledger):
                     args[2])).lower() == "get my dues":
                 st, user = self.getUnameFromEmail(command.issuer)
                 if not st:
-                    self.sendMessage(command.issuer, "you are not a user.\n"
-                                                     "send 'ledger help' for"
-                                                     " assistance")
+                    self.notAUser(command.issuer)
                     continue
 
                 self.sendMessage(command.issuer, self.listDues(user))
@@ -228,6 +214,10 @@ class EmailLedgerInterface(Ledger):
         self.dumpUsers()
         self.dumpLedger()
         self.command_queue = []
+
+    def notAUser(self, to_address):
+            self.sendMessage(to_address, "You are not a user.\n"
+                "Send 'ledger help' for assistance.")
 
     def sendMessage(self, to_address, message):
         self.message_list.append(Message(to_address, message))
