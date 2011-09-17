@@ -1,0 +1,2 @@
+class AddMeTest(CommandTest):
+
