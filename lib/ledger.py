@@ -159,6 +159,9 @@ class Ledger(object):
         if amount < 0:
             return False, "A negative amount cannot be paid!"
 
+        if amount == 0:
+            return False, "A non-zero amount must be exchanged."
+
         for ii, due in enumerate(self.dues):
             if due.ower.lower() == ower.lower() and \
                     due.owee.lower() == owee.lower():
