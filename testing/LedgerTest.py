@@ -3,9 +3,9 @@ import shutil
 import os
 import random
 
-from lib.ledger import Ledger
-from lib.ledger import Due
-from lib.ledger import User
+from lib.Ledger import Ledger
+from lib.Due import Due
+from lib.User import User
 
 class LedgerTest(unittest.TestCase):
     test_uname = "testuname"
@@ -34,6 +34,10 @@ class LedgerTest(unittest.TestCase):
 
     def addEmail(self, usr_ii, eml_ii):
         return self.ledger.addEmail(self.genUsername(usr_ii),
+            self.genEmail(eml_ii))
+
+    def removeEmail(self, usr_ii, eml_ii):
+        return self.ledger.removeEmail(self.genUsername(usr_ii),
             self.genEmail(eml_ii))
 
     def assertUsersCorrect(self):

@@ -3,7 +3,7 @@ import smtplib
 import os
 import re
 
-from lib.ledger import Ledger
+from lib.Ledger import Ledger
 import lib.functions
 
 from poplib import POP3_SSL
@@ -135,12 +135,21 @@ class EmailLedgerInterface(Ledger):
             if len(args) >= 1 and args[0].lower() == "help":
                 self.queueMessage(command.issuer,
                         "Commands:\n"
-                        "add me <uname>\n"
-                        "<uname> owes me <amount>\n"
-                        "i paid <uname> <amount>\n"
-                        "get users\n"
-                        "get my dues\n"
-                        "help\n"
+                        "add me <uname>             - add yourself as a user\n"
+                        "add email <email>          - add email address to\n"
+                        "                             your account\n"
+                        "remove email <email>       - remove <email> from\n"
+                        "                             your account\n"
+                        "get my emails              - get a list of email\n"
+                        "                             addresses attached to\n"
+                        "                             your account\n"
+                        "<uname> owes me <amount>   - <uname> owes you money\n"
+                        "i paid <uname> <amount>    - you paid <uname> some\n"
+                        "                           - money\n"
+                        "get users                  - get a list of users\n"
+                        "get my dues                - get who you owe and\n"
+                        "                             who owes you money\n"
+                        "help                       - get this help again\n"
                         "\n"
                         "Remember: Always put 'ledger' in the subject line "
                         "and before each command. Also, usernames must be a "
@@ -148,13 +157,53 @@ class EmailLedgerInterface(Ledger):
                         "\n"
                         "eg. ledger add me my_name\n"
                         "\n"
-                        "And of course... https://github.com/SudoVim/TMSLedger\n")
+                        "And of course..."
+                        " https://github.com/SudoVim/TMSLedger\n")
                 continue
 
             # add me <uname>
             if len(args) >= 3 and ("%s %s" % (args[0], args[1])).lower() \
                     == "add me":
                 st, msg = self.addUser(args[2], command.issuer)
+                self.queueMessage(command.issuer, msg)
+                continue
+
+            # add email <email>
+            if len(args) >= 3 and ("%s %s" % (args[0], args[1])).lower() \
+                    == "add email":
+                st, uname = self.getUnameFromEmail(command.issuer)
+                if not st:
+                    self.notAUser(command.issuer)
+                    continue
+
+                st, msg = self.addEmail(uname, args[2])
+
+                self.queueMessage(command.issuer, msg)
+                continue
+
+            # remove email <email>
+            if len(args) >= 3 and ("%s %s" % (args[0], args[1])).lower() \
+                    == "remove email":
+                st, uname = self.getUnameFromEmail(command.issuer)
+                if not st:
+                    self.notAUser(command.issuer)
+                    continue
+
+                st, msg = self.removeEmail(uname, args[2])
+
+                self.queueMessage(command.issuer, msg)
+                continue
+
+            # get my emails
+            if len(args) >= 3and ("%s %s %s" % (args[0], args[1],
+                    args[2])).lower() == "get my emails":
+                st, uname = self.getUnameFromEmail(command.issuer)
+                if not st:
+                    self.notAUser(command.issuer)
+                    continue
+
+                st, msg = self.listEmails(uname)
+
                 self.queueMessage(command.issuer, msg)
                 continue
 
@@ -218,7 +267,11 @@ class EmailLedgerInterface(Ledger):
                 "Send 'ledger help' for assistance.")
 
     def queueMessage(self, to_address, message):
-        self.message_list.append(Message(to_address, message))
+        if isinstance(to_address, list):
+            for addr in to_address:
+                self.message_list.append(Message(addr, message))
+        else:
+            self.message_list.append(Message(to_address, message))
 
     def sendMessages(self):
         if self.debug_mode:

@@ -1,64 +1,6 @@
 import os
-
-class User(object):
-
-    def __init__(self, username, email):
-        self.username = username
-
-        if isinstance(email, list):
-            self.email = email
-        else:
-            self.email = []
-            self.email.append(email)
-
-    def __eq__(self, other):
-        if isinstance(other, User):
-            if self.username == other.username and \
-                    len(self.email) == len(other.email):
-                for eml1, eml2 in zip(self.email, other.email):
-                    if eml1 != eml2:
-                        return False
-
-                return True
-        return NotImplemented
-
-    def __ne__(self, other):
-        ret = self.__eq__(other)
-        if ret is NotImplemented:
-            return ret
-        return not ret
-
-    def printLine(self):
-        ret = self.username
-        for eml in self.email:
-            ret += " " + eml
-
-class Due(object):
-
-    def __init__(self, ower, owee, amount):
-        self.ower = ower
-        self.owee = owee
-        self.amount = int(amount)
-
-    def formatAmount(self):
-        return "%d.%02d" % (self.amount / 100, self.amount % 100)
-
-    def __eq__(self, other):
-        if isinstance(other, Due):
-            return self.ower == other.ower and \
-                    self.owee == other.owee and \
-                    self.amount == other.amount
-        return NotImplemented
-
-    def __ne__(self, other):
-        ret = self.__eq__(other)
-        if ret is NotImplemented:
-            return ret
-        return not ret
-
-    def __str__(self):
-        return "ower: %s owee: %s amount: %s" % (self.ower, self.owee,
-            self.formatAmount())
+from lib.User import User
+from lib.Due import Due
 
 class Ledger(object):
     DATA_PATH = os.path.join('.','data')
@@ -149,12 +91,31 @@ class Ledger(object):
             return False, user
 
         st, uname = self.getUnameFromEmail(email)
-        if st:
-            return False, "Email address %s in use by another user." % email
+        if st and email not in user.email:
+            return False, "Email address %s is in use by another user." % email
+        elif st:
+            return False, "Email address %s is already connected to your" \
+                " account." % email
 
         user.email.append(email)
         return True, "Email address %s successfully added to user %s." \
             % (email, user.username)
+
+    def removeEmail(self, username, email):
+        st, user = self.findUser(username)
+
+        if not st:
+            return False, user
+
+        return user.removeEmail(email)
+
+    def listEmails(self, username):
+        st, user = self.findUser(username)
+
+        if not st:
+            return False, user
+
+        return user.listEmails()
 
     def findUser(self, username):
         for usr in self.users:

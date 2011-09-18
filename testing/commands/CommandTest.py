@@ -4,8 +4,9 @@ from testing.LedgerTest import LedgerTest
 class CommandTest(LedgerTest):
 
     BAD_EML = 1
-    BAD_UNAME = 2
-    BAD_TARGET = 3
+    HAS_EML = 2
+    BAD_UNAME = 3
+    BAD_TARGET = 4
 
     def setUp(self):
         self.ledger = EmailLedgerInterface(None, None, None, None)
@@ -24,15 +25,16 @@ class CommandTest(LedgerTest):
         latest_message = self.ledger.message_list[-1]
         self.assertEquals(latest_message.recipient, self.genEmail(eml_ii))
 
-        if not fail:
-            self.assertEquals(latest_message.message, "Successfully added user"
-                " %s with email %s." % (self.genUsername(usr_ii),
-                self.genEmail(eml_ii)))
-        elif fail_uname:
-            self.assertEquals(latest_message.message, "%s '%s' already"
-                " exists for another user." % ("Username" if fail_uname else
-                "Email", self.genUsername(usr_ii) if fail_uname else
-                self.genEmail(eml_ii)))
+    def addEmail(self, eml_ii, eml_a_ii, usr_ii, fail=None):
+        pre_msg_length = len(self.ledger.message_list)
+        self.addLedgerCommand(self.genEmail(eml_ii), "ledger add email %s"
+            % self.genEmail(eml_a_ii))
+        self.ledger.performCommands()
+        post_msg_length = len(self.ledger.message_list)
+
+        self.assertEquals(pre_msg_length + 1, post_msg_length)
+        latest_message = self.ledger.message_list[-1]
+        self.assertEquals(latest_message.recipient, self.genEmail(eml_ii))
 
     def owesMe(self, eml_ii, usr_ii, owes_me=True, fail=None):
         pre_msg_length = len(self.ledger.message_list)
