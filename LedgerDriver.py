@@ -17,3 +17,6 @@ try:
         time.sleep(10)
 except KeyboardInterrupt:
     interface.performCommands()
+    interface.sendMessages()
+    interface.dumpUsers()
+    interface.dumpLedger()
