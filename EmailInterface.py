@@ -158,7 +158,7 @@ class EmailLedgerInterface(Ledger):
                         "eg. ledger add me my_name\n"
                         "\n"
                         "And of course..."
-                        " https://github.com/SudoVim/TMSLedger\n")
+                        " https://github.com/SudoVim/EmailLedger\n")
                 continue
 
             # add me <uname>
