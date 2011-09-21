@@ -1,5 +1,6 @@
 import time
 import sys
+import socket
 from EmailInterface import EmailLedgerInterface
 
 interface = EmailLedgerInterface(sys.argv[1], sys.argv[2], sys.argv[3],
@@ -9,7 +10,10 @@ interface.readLedger()
 
 try:
     while True:
-        interface.receiveCommands()
+        try:
+            interface.receiveCommands()
+        except socket.gaierror:
+            pass
         interface.performCommands()
         interface.sendMessages()
         interface.dumpUsers()
