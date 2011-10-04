@@ -146,6 +146,7 @@ class EmailLedgerInterface(Ledger):
                         "<uname> owes me <amount>   - <uname> owes you money\n"
                         "i paid <uname> <amount>    - you paid <uname> some\n"
                         "                           - money\n"
+                        "i owe <uname> <amount>     - you owe <uname> money\n"
                         "get users                  - get a list of users\n"
                         "get my dues                - get who you owe and\n"
                         "                             who owes you money\n"
@@ -223,6 +224,13 @@ class EmailLedgerInterface(Ledger):
                     "i paid":
                 ower = args[2]
                 st, owee = self.getUnameFromEmail(command.issuer)
+                owesMe = True
+
+            # i owe <uname> <amount>
+            if len(args) >= 4 and ("%s %s" % (args[0], args[1])).lower() == \
+                    "i owe":
+                owee = args[2]
+                st, ower = self.getUnameFromEmail(command.issuer)
                 owesMe = True
 
             # 'owes me' and 'i paid' work the same way
