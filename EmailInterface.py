@@ -211,12 +211,14 @@ class EmailLedgerInterface(Ledger):
             owesMe = False
             ower = ""
             owee = ""
+            other_party = ""
             st = False
             # <uname> owes me <amount>
             if len(args) >= 4 and ("%s %s" % (args[1], args[2])).lower() \
                     == "owes me":
                 ower = args[0]
                 st, owee = self.getUnameFromEmail(command.issuer)
+                other_party = ower
                 owesMe = True
 
             # i paid <uname> <amount>
@@ -224,6 +226,7 @@ class EmailLedgerInterface(Ledger):
                     "i paid":
                 ower = args[2]
                 st, owee = self.getUnameFromEmail(command.issuer)
+                other_party = ower
                 owesMe = True
 
             # i owe <uname> <amount>
@@ -231,6 +234,7 @@ class EmailLedgerInterface(Ledger):
                     "i owe":
                 owee = args[2]
                 st, ower = self.getUnameFromEmail(command.issuer)
+                other_party = owee
                 owesMe = True
 
             # 'owes me' and 'i paid' work the same way
@@ -244,7 +248,8 @@ class EmailLedgerInterface(Ledger):
                 st, msg = self.addDue(ower, owee, amount)
                 self.queueMessage(command.issuer, msg)
                 if st:
-                    self.queueMessage(self.getEmailFromUname(ower)[1], msg)
+                    self.queueMessage(self.getEmailFromUname(other_party)[1],
+                        msg)
                 continue
 
             # get users
